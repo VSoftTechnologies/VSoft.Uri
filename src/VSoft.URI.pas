@@ -10,50 +10,68 @@ type
 
 //TODO : Encoding/Decoding'
 
-  TURI = record
-  private
-    FOriginal : string;
-    FDecoded  : boolean;
-    FScheme: string;
-    FUsername: string;
-    FPassword: string;
-    FHost: string;
-    FPort: integer;
-    FPath: string;
-    FFragment : string;
-    FQueryParams : TArray<TQueryParam>;
-    FHasAuthority : boolean;
+  IUri = interface
+  ['{48515EE4-EA48-4BDB-B7B0-FB9D0A3E26CD}']
+    function GetOriginal : string;
+    function GetScheme: string;
+    function GetUsername: string;
+    function GetPassword: string;
+    function GetHost: string;
+    function GetPort: integer;
+    function GetFragment : string;
+    function GetQueryParams : TArray<TQueryParam>;
+    function GetHasAuthority : boolean;
     function GetIsEmpty : boolean;
-    procedure SetQueryParams(const Value: TArray<TQueryParam>);
-    class function GetDefaultPortForScheme(const scheme : string) : integer;static;
-    class function InternalParse(const uriString : string; const decode : boolean) : TURI;static;
-    constructor Create(const originalString : string; const decoded : boolean; 
-                       const scheme, username, password, host, path, fragement : string; 
-                       const port : integer; const queryParams : TArray<TQueryParam>;
-                       const hasAuthority : boolean);overload;
-    constructor Create(const originalString : string);overload; 
-  public
-    class function Parse(const uriString : string; const decode : boolean = true) : TURI;static;
-    class function TryParse(const uriString : string; const decode : boolean; out value : TURI) : boolean;static;
-    class function TryParseWithError(const uriString : string; const decode : boolean; out value : TURI; out error : string) : boolean;static;
-    class function Empty : TURI; static;
+    function GetIsUnc : boolean;
+    function GetIsFile : boolean;
+    function GetAbsoluteUri : string;
+    function GetLocalPath : string;
+    function GetAbsolutePath : string;
+
     function ToString() : string;
-    property OriginalUriString : string read FOriginal;
-    property Scheme   : string read FScheme write FScheme;
-    property UserName : string read FUsername write FUsername;
-    property Password : string read FPassword write FPassword;
-    property Host     : string read FHost     write FHost;
-    property Port     : integer read FPort     write FPort;
-    property Path     : string read FPath     write FPath;
-    property QueryParams : TArray<TQueryParam> read FQueryParams write SetQueryParams;
-    property Fragment : string read FFragment write FFragment;
+
+
+    procedure SetScheme(const value: string);
+    procedure SetUsername(const value: string);
+    procedure SetPassword(const value: string);
+    procedure SetHost(const valuet: string);
+    procedure SetPort(const valuet: integer);
+    procedure SetPath(const valueh: string);
+    procedure SetFragment(const value : string);
+    procedure SetQueryParams(const value : TArray<TQueryParam>);
+
+    property OriginalUriString : string read GetOriginal;
+    property Scheme   : string read GetScheme write SetScheme;
+    property UserName : string read GetUsername write SetUsername;
+    property Password : string read GetPassword write SetPassword;
+    property Host     : string read GetHost     write SetHost;
+    property Port     : integer read GetPort     write SetPort;
+    property QueryParams : TArray<TQueryParam> read GetQueryParams write SetQueryParams;
+    property Fragment : string read GetFragment write SetFragment;
+    property IsEmpty  : boolean read GetIsEmpty;
+    property IsFile   : boolean read GetIsFile;
+    property IsUnc    : boolean read GetIsUnc;
+    property AbsoluteUri : string read GetAbsoluteUri;
+    property AbsolutePath : string read GetAbsolutePath;
+    property LocalPath : string read GetLocalPath;
+
   end;
+
+  type
+    TUriFactory = class
+    public
+      class function Parse(const uriString : string; const decode : boolean = true) : IUri;static;
+      class function TryParse(const uriString : string; const decode : boolean; out value : IUri) : boolean;static;
+      class function TryParseWithError(const uriString : string; const decode : boolean; out value : IUri; out error : string) : boolean;static;
+      class function Empty : IUri; static;
+    end;
 
 implementation
 
 uses
   System.Types,
-  System.SysUtils;
+  System.SysUtils,
+  VSoft.Uri.Impl;
 
 
 const
@@ -86,49 +104,19 @@ end;
 {$WARN 	WIDECHAR_REDUCED ON}
 { TURI }
 
-constructor TURI.Create(const originalString : string; const decoded : boolean; const scheme, username, password, host, path, fragement : string; const port : integer; const queryParams : TArray<TQueryParam>;const hasAuthority : boolean );
+
+
+
+
+
+{ TUriFactory }
+
+class function TUriFactory.Empty: IUri;
 begin
-  FOriginal := originalString;
-  FDecoded  := decoded;
-  FScheme := scheme;
-  FUsername := username;
-  FPassword := password;
-  FHost := host;
-  FPath := path;
-  FFragment := fragement;
-  FQueryParams := queryParams;
-  FPort := port;
-  FHasAuthority := hasAuthority;
+  result := TUriImpl.Create('');
 end;
 
-
-constructor TURI.Create(const originalString: string);
-begin
-  //empty on purpose;
-end;
-
-class function TURI.Empty: TURI;
-begin
-  result := TURI.Create('');
-end;
-
-class function TURI.GetDefaultPortForScheme(const scheme: string): integer;
-begin
-  result := -1;
-  if scheme = 'http' then
-    exit(80);
-  if scheme = 'https' then
-    exit(443);
- 
-end;
-
-function TURI.GetIsEmpty: boolean;
-begin
-  result := FScheme = '';
-end;
-
-
-class function TURI.InternalParse(const uriString: string; const decode : boolean): TURI;
+class function TUriFactory.Parse(const uriString: string; const decode: boolean): IUri;
 var
   sScheme : string;
   sUsername: string;
@@ -137,9 +125,9 @@ var
   iPort: integer;
   sPath: string;
   sFragment : string;
-  queryParams : TArray<TQueryParam>;  
+  queryParams : TArray<TQueryParam>;
   bHasAuthority : boolean;
-  
+
   idx     : integer;
   len     : integer;
   function FindSchemeDelimiter(const limit: Integer): Integer;
@@ -163,7 +151,6 @@ var
   var
     pairs : TArray<string>;
     pair  : TArray<string>;
-    param : TQueryParam;
     i : integer;
   begin
     pairs := value.Split(['&']);
@@ -175,10 +162,10 @@ var
       if length(pair) > 1 then
         queryParams[i].Value := pair[1];
     end;
-    
+
   end;
-  
-  
+
+
   //        userinfo       host      port
   //        ┌──┴───┐ ┌──────┴──────┐ ┌┴┐
   //https://john.doe@www.example.com:123/forum/questions/?tag=networking&order=newest#top
@@ -197,6 +184,18 @@ var
     bHasAuthority := true;
     iPort := -1;
     Inc(idx,2); // skip the //
+
+   if (sScheme = 'file') and (uriString[idx] = '/') then
+    begin
+      //it's a filepath so treat it differently
+      Inc(idx); // skip the /
+      sPath := Copy(uriString,idx, len);
+      exit;
+    end;
+
+
+
+
     j := FindDelimiter('/,?,#',uriString, idx);
     if j > 0 then
     begin
@@ -210,7 +209,7 @@ var
     end;
 
     if Length(sAuthority) > 0 then
-    begin   
+    begin
       i := pos('@', sAuthority);
       if i > 0 then //we have user info;
       begin
@@ -220,11 +219,11 @@ var
         begin
           sUsername := userParts[0];
           sPassword := userParts[1];
-        
+
         end
         else
           sUsername := sUserInfo;
-        Delete(sAuthority, 1, i);        
+        Delete(sAuthority, 1, i);
       end;
       //check for ip6 address
       if sAuthority.StartsWith('[') then
@@ -240,14 +239,14 @@ var
       if i > 0 then
       begin
         Inc(i);
-        j := i;        
+        j := i;
         while IsNumeric(sAuthority[i]) and (i <= Length(sAuthority))  do
           Inc(i);
-          
+
         if i - j > 0  then
         begin
-          sPort := Copy(sAuthority,j ,i - j);   
-          Delete(sAuthority,j-1,i-j + 1);      
+          sPort := Copy(sAuthority,j ,i - j);
+          Delete(sAuthority,j-1,i-j + 1);
           iPort := StrToIntDef(sPort,-1);
         end
         else
@@ -267,7 +266,7 @@ var
     Inc(idx);
 
     //find the fragment
-    i := LastDelimiter('#', uriString);   
+    i := LastDelimiter('#', uriString);
     if i > idx then
     begin
       sFragment := Copy(uriString, i + 1, len - i);
@@ -288,41 +287,61 @@ var
       sPath := Copy(uriString, idx, len - idx + 1);
 
    if iPort = -1 then
-    iPort := TURI.GetDefaultPortForScheme(sScheme);
+    iPort := TUriImpl.GetDefaultPortForScheme(sScheme);
   end;
 
   //urn:oasis:names:specification:docbook:dtd:xml:4.1.2
   //└┬┘ └──────────────────────┬──────────────────────┘
-  //scheme                    path  
+  //scheme                    path
   procedure ParseNoAuthority;
   begin
     bHasAuthority := false;
     iPort := -1; //
     sPath := Copy(uriString, idx, len);
   end;
-  
-  
+
+
 begin
   if uriString = '' then
     raise EArgumentException.Create('Empty uri string');
 
+
+  //can't parse unc without a scheme, so add one.
+  if uriString.StartsWith('\\') then
+  begin
+    result := TUriFactory.Parse('file:' + StringReplace(uriString, '\','/',[rfReplaceAll]),decode);
+    exit;
+  end;
+
+  //check for windows file path.
+  if length(uriString) >= 3 then
+  begin
+    if IsAlpha(uriString[1]) and (copy(uriString,2,2) = ':\') then
+    begin
+      result := TUriFactory.Parse('file:///' + StringReplace(uriString, '\','/',[rfReplaceAll]),decode);
+      exit;
+    end;
+  end;
+
+
+
   if not IsAlpha(uriString[1]) then
     raise EArgumentException.Create('Uri must start with alpha character [a..z,A..Z]');
-    
+
   len := Length(uriString);
 
   idx := FindSchemeDelimiter(len);
 
-  
+
   if idx = -2 then
     raise EArgumentException.Create('Non scheme characters found in scheme.');
   if idx = -1 then
-    raise EArgumentException.Create('Invalid Uri : ' + uriString);    
+    raise EArgumentException.Create('Invalid Uri : ' + uriString);
 
   //first char is :
   if idx = 1 then
-    raise EArgumentException.Create('Empty Uri Scheme : ' + uriString);    
- 
+    raise EArgumentException.Create('Empty Uri Scheme : ' + uriString);
+
   sScheme := Copy(uriString, 1,idx -1);
   Inc(idx); //skip the :
 
@@ -332,85 +351,31 @@ begin
   else
     ParseNoAuthority;
 
-  result := TUri.Create(uriString, decode, sScheme, sUsername, sPassword,sHost,sPath,sFragment, iPort,queryParams, bHasAuthority);    
+  result := TUriImpl.Create(uriString, decode, sScheme, sUsername, sPassword,sHost,sPath,sFragment, iPort,queryParams, bHasAuthority);
 end;
 
-class function TURI.Parse(const uriString: string; const decode : boolean = true): TURI;
-begin
-  result := TURI.InternalParse(uriString.Trim,decode);
-end;
 
-procedure TURI.SetQueryParams(const Value: TArray<TQueryParam>);
-begin
-  FQueryParams := Value;
-end;
-
-function TURI.ToString(): string;
-var
-  sAuth: string;
-  i : integer;
-begin
-  if FUsername <> '' then
-    if FPassword <> '' then
-      sAuth := FUsername + ':' + FPassword + '@'
-    else
-      sAuth := FUsername + '@'
-  else
-    sAuth := '';
-  if FScheme <> '' then
-  begin
-    if FHasAuthority then
-      result := FScheme.ToLower + '://'
-    else
-      result := FScheme + ':';
-  end else
-    result := '';
-    
-  result := result + sAuth + FHost;
-  if (FPort > 0) and (FPort <> GetDefaultPortForScheme(FScheme)) and ((FScheme = 'https')  or  (FScheme = 'https')) then
-    result := result + ':' + FPort.ToString;
-  if FPath <> '' then
-  begin
-    if FHasAuthority then
-      result := result + '/' + FPath
-    else
-      result := result + FPath
-      
-  end;
-  if Length(FQueryParams) > 0 then
-  begin
-    result := result + '?';
-    for i := 0 to Length(FQueryParams) - 1 do
-    begin
-      if i > 0  then
-        result := result + '&';
-      result := result + FQueryParams[i].Name + '=' + FQueryParams[i].Value;
-    end;
-  end;
-  if Fragment <> '' then
-    result := result + '#' + Fragment;
-end;
-
-class function TURI.TryParse(const uriString: string; const decode : boolean; out value: TURI): boolean;
+class function TUriFactory.TryParse(const uriString: string; const decode: boolean; out value: IUri): boolean;
 begin
   try
-    value := TURI.InternalParse(uriString.Trim, decode);
+    value := TUriFactory.Parse(uriString.Trim, decode);
     result := true;
   except
-    value := Default(TURI);
-    result := false    
+    value := nil;
+    result := false
   end;
+
 end;
 
-class function TURI.TryParseWithError(const uriString: string; const decode : boolean;  out value: TURI; out error: string): boolean;
+class function TUriFactory.TryParseWithError(const uriString: string; const decode: boolean; out value: IUri; out error: string): boolean;
 begin
   try
-    value := TURI.InternalParse(uriString.Trim, decode);
+    value := TUriFactory.Parse(uriString.Trim, decode);
     result := true;
   except
     on e : Exception do
-    begin  
-      value := Default(TURI);
+    begin
+      value := nil;
       error := e.Message;
       result := false;
     end;

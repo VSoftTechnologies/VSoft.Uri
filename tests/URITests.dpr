@@ -14,7 +14,8 @@ uses
   {$ENDIF }
   DUnitX.TestFramework,
   VSoft.URI.Tests in 'VSoft.URI.Tests.pas',
-  VSoft.URI in '..\src\VSoft.URI.pas';
+  VSoft.URI in '..\src\VSoft.URI.pas',
+  VSoft.Uri.Impl in '..\src\VSoft.Uri.Impl.pas';
 
 {$IFNDEF TESTINSIGHT}
 var

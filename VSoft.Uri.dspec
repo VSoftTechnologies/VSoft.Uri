@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package>
+<!-- xmlns="http://schemas.finalbuilder.com/packaging/2018/03/dspec.xsd" -->
+	<metadata>
+    <!-- basic meta data, requried -->
+    <id>VSoft.Uri</id>
+    <version>0.0.1</version>
+    <description>Uri Parser</description>
+    <authors>Vincent Parrett</authors>
+    <owners>vincentparrett</owners>
+    <projectUrl>https://github.com/VSoftTechnologies/VSoft.Uri</projectUrl>
+    <iconUrl></iconUrl>
+    <copyright>Vincent Parrett and contributors</copyright>
+    <tags>Uri Parser</tags>   
+    <license>Apache-2.0</license>
+  </metadata>
+ 
+  <targetPlatforms>
+    <!-- TODO : See which versions this will actually compile with and adjust list accordingly -->    
+    <targetPlatform compiler="XE3" platforms="Win32, Win64" template="Default" />
+    <targetPlatform compiler="XE4" platforms="Win32, Win64" template="Default" />
+    <targetPlatform compiler="XE5" platforms="Win32, Win64" template="Default" />
+    <targetPlatform compiler="XE6" platforms="Win32, Win64" template="Default" />
+    <targetPlatform compiler="XE7" platforms="Win32, Win64" template="Default" />
+    <targetPlatform compiler="XE8" platforms="Win32, Win64" template="Default" />
+    <targetPlatform compiler="10.0" platforms="Win32, Win64" template="Default" />
+    <targetPlatform compiler="10.1" platforms="Win32, Win64" template="Default" />
+    <targetPlatform compiler="10.2" platforms="Win32, Win64" template="Default" />
+    <targetPlatform compiler="10.3" platforms="Win32, Win64" template="Default" />    
+  </targetPlatforms>
+  <templates>
+    <template name="Default">
+      <dependencies>
+        <!-- no dependencies -->
+      </dependencies>
+      <source>
+        <file src="src\*.pas" target="src" flatten="true"  />
+      </source>
+      <files>
+        <file src="license.txt" target="" flatten="true" />
+      </files>
+      <searchPaths>
+        <searchPath path="src"  />
+      </searchPaths>
+    </template>
+  </templates>
+</package>
