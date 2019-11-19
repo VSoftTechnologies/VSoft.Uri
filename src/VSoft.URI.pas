@@ -66,11 +66,18 @@ type
       class function Empty : IUri; static;
     end;
 
+//only public so we can test
+//type
+//  TStringSplitOptions = (None, ExcludeEmpty);
+//
+//function Split(const value : string; const Separator: array of Char; Count: Integer;  Options: TStringSplitOptions): TArray<string>;
+
 implementation
 
 uses
   System.Types,
   System.SysUtils,
+  System.StrUtils,
   VSoft.Uri.Impl;
 
 
@@ -102,11 +109,82 @@ begin
 end;
 
 {$WARN 	WIDECHAR_REDUCED ON}
-{ TURI }
+
+//Copied from XE7
+function StartsWith(const current : string; const Value: string; IgnoreCase: Boolean = false): Boolean;
+begin
+  if not IgnoreCase then
+    Result := System.SysUtils.StrLComp(PChar(current), PChar(Value), Length(Value)) = 0
+  else
+    Result := System.SysUtils.StrLIComp(PChar(current), PChar(Value), Length(Value)) = 0;
+end;
 
 
+function IndexOfAny(const value : string; const AnyOf: array of Char; StartIndex, Count: Integer): Integer;
+var
+  I: Integer;
+  C: Char;
+  Max: Integer;
+begin
+  if (StartIndex + Count) >= Length(value) then
+    Max := Length(value)
+  else
+    Max := StartIndex + Count;
+
+  I := StartIndex;
+  while I < Max do
+  begin
+    for C in AnyOf do
+      if value[I] = C then
+        Exit(I);
+    Inc(I);
+  end;
+  Result := -1;
+end;
+
+type
+  TStringSplitOptions = (None, ExcludeEmpty);
 
 
+function Split(const value : string; const Separator: array of Char; Count: Integer;  Options: TStringSplitOptions): TArray<string>;
+const
+  DeltaGrow = 32;
+var
+  NextSeparator, LastIndex: Integer;
+  Total: Integer;
+  CurrentLength: Integer;
+  S: string;
+begin
+  Total := 0;
+  LastIndex := 1;
+  CurrentLength := 0;
+  NextSeparator := IndexOfAny(value, Separator, LastIndex, Length(value));
+  while (NextSeparator >= 0) and (Total < Count) do
+  begin
+    S := Copy(value, LastIndex, NextSeparator - LastIndex);
+    if (S <> '') or ((S = '') and (Options <> ExcludeEmpty)) then
+    begin
+      Inc(Total);
+      if CurrentLength < Total then
+      begin
+        CurrentLength := Total + DeltaGrow;
+        SetLength(Result, CurrentLength);
+      end;
+      Result[Total - 1] := S;
+    end;
+    LastIndex := NextSeparator + 1;
+    NextSeparator := IndexOfAny(value, Separator, LastIndex, Length(value));
+  end;
+
+  if (LastIndex < Length(value)) and (Total < Count) then
+  begin
+    Inc(Total);
+    SetLength(Result, Total);
+    Result[Total - 1] := Copy(value, LastIndex, Length(value));
+  end
+  else
+    SetLength(Result, Total);
+end;
 
 
 { TUriFactory }
@@ -153,11 +231,11 @@ var
     pair  : TArray<string>;
     i : integer;
   begin
-    pairs := value.Split(['&']);
+    pairs := Split(value, ['&'], MaxInt, None);
     SetLength(queryParams, Length(pairs));
     for i := 0 to Length(pairs) -1 do
     begin
-      pair := pairs[i].Split(['=']);
+      pair := Split(pairs[i], ['='], MaxInt, None);
       queryParams[i].Name := pair[0];
       if length(pair) > 1 then
         queryParams[i].Value := pair[1];
@@ -214,7 +292,7 @@ var
       if i > 0 then //we have user info;
       begin
         sUserInfo := Copy(sAuthority,1, i-1);
-        userParts := sUserInfo.Split([':']);
+        userParts := Split(sUserInfo, [':'], MaxInt, None);
         if Length(userParts) = 2 then
         begin
           sUsername := userParts[0];
@@ -226,7 +304,8 @@ var
         Delete(sAuthority, 1, i);
       end;
       //check for ip6 address
-      if sAuthority.StartsWith('[') then
+
+      if StartsWith(sAuthority, ('[')) then
       begin
         i := LastDelimiter(']',sAuthority);
         if i = 0  then
@@ -307,7 +386,7 @@ begin
 
 
   //can't parse unc without a scheme, so add one.
-  if uriString.StartsWith('\\') then
+  if StartsWith(uriString, '\\') then
   begin
     result := TUriFactory.Parse('file:' + StringReplace(uriString, '\','/',[rfReplaceAll]),decode);
     exit;
@@ -346,7 +425,7 @@ begin
   Inc(idx); //skip the :
 
   //check if we have authority
-  if pos('//',uriString, idx) = idx then
+  if PosEx('//',uriString, idx) = idx then
     ParseWithAuthority
   else
     ParseNoAuthority;
@@ -358,7 +437,7 @@ end;
 class function TUriFactory.TryParse(const uriString: string; const decode: boolean; out value: IUri): boolean;
 begin
   try
-    value := TUriFactory.Parse(uriString.Trim, decode);
+    value := TUriFactory.Parse(Trim(uriString), decode);
     result := true;
   except
     value := nil;
@@ -370,7 +449,7 @@ end;
 class function TUriFactory.TryParseWithError(const uriString: string; const decode: boolean; out value: IUri; out error: string): boolean;
 begin
   try
-    value := TUriFactory.Parse(uriString.Trim, decode);
+    value := TUriFactory.Parse(Trim(uriString), decode);
     result := true;
   except
     on e : Exception do

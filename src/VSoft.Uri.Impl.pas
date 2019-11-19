@@ -105,7 +105,7 @@ begin
   if FScheme <> '' then
   begin
     if FHasAuthority then
-      result := FScheme.ToLower + '://'
+      result := LowerCase(FScheme) + '://'
     else
       result := FScheme + ':';
   end else
@@ -113,7 +113,7 @@ begin
 
   result := result + sAuth + FHost;
   if (FPort > 0) and (FPort <> GetDefaultPortForScheme(FScheme)) and ((FScheme = 'https')  or  (FScheme = 'https')) then
-    result := result + ':' + FPort.ToString;
+    result := result + ':' + IntToStr(FPort);
   if FPath <> '' then
   begin
     if FHasAuthority then

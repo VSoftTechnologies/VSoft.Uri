@@ -55,6 +55,10 @@ type
     [TestCase('4','file:///c:/temp/foo/bar/test.txt|false','|')]
     procedure Test_IsUnc(const uriString : string; const isUnc : boolean);
 
+//    [Test]
+//    [TestCase('1','one:two:three','|')]
+//    procedure Test_Split(const value : string);
+
   end;
 
 implementation
@@ -119,6 +123,15 @@ begin
   Assert.AreEqual(localPath, uri.LocalPath);
 
 end;
+
+//procedure TURITests.Test_Split(const value : string);
+//var
+//  values : TArray<string>;
+//begin
+//  values := Split(value, [':'],MaxInt, None);
+//  Assert.AreEqual(3,Length(values));
+//  Assert.AreEqual('one', values[0]);
+//end;
 
 procedure TURITests.Test_Will_Fail_OnEmpty;
 begin
