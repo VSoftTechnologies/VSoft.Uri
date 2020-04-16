@@ -27,6 +27,7 @@ type
     function GetAbsoluteUri : string;
     function GetLocalPath : string;
     function GetAbsolutePath : string;
+    function GetQueryString : string;
 
     function ToString() : string;
 
@@ -39,6 +40,7 @@ type
     procedure SetPath(const valueh: string);
     procedure SetFragment(const value : string);
     procedure SetQueryParams(const value : TArray<TQueryParam>);
+    procedure SetQueryString(const value : string);
 
     property OriginalUriString : string read GetOriginal;
     property Scheme   : string read GetScheme write SetScheme;
@@ -47,6 +49,7 @@ type
     property Host     : string read GetHost     write SetHost;
     property Port     : integer read GetPort     write SetPort;
     property QueryParams : TArray<TQueryParam> read GetQueryParams write SetQueryParams;
+    property QueryString : string read GetQueryString write SetQueryString;
     property Fragment : string read GetFragment write SetFragment;
     property IsEmpty  : boolean read GetIsEmpty;
     property IsFile   : boolean read GetIsFile;
@@ -64,6 +67,7 @@ type
       class function TryParse(const uriString : string; const decode : boolean; out value : IUri) : boolean;static;
       class function TryParseWithError(const uriString : string; const decode : boolean; out value : IUri; out error : string) : boolean;static;
       class function Empty : IUri; static;
+      class function Create : IUri; static;
     end;
 
 //only public so we can test
@@ -120,71 +124,8 @@ begin
 end;
 
 
-function IndexOfAny(const value : string; const AnyOf: array of Char; StartIndex, Count: Integer): Integer;
-var
-  I: Integer;
-  C: Char;
-  Max: Integer;
-begin
-  if (StartIndex + Count) >= Length(value) then
-    Max := Length(value)
-  else
-    Max := StartIndex + Count;
-
-  I := StartIndex;
-  while I < Max do
-  begin
-    for C in AnyOf do
-      if value[I] = C then
-        Exit(I);
-    Inc(I);
-  end;
-  Result := -1;
-end;
-
-type
-  TStringSplitOptions = (None, ExcludeEmpty);
 
 
-function Split(const value : string; const Separator: array of Char; Count: Integer;  Options: TStringSplitOptions): TArray<string>;
-const
-  DeltaGrow = 32;
-var
-  NextSeparator, LastIndex: Integer;
-  Total: Integer;
-  CurrentLength: Integer;
-  S: string;
-begin
-  Total := 0;
-  LastIndex := 1;
-  CurrentLength := 0;
-  NextSeparator := IndexOfAny(value, Separator, LastIndex, Length(value));
-  while (NextSeparator >= 0) and (Total < Count) do
-  begin
-    S := Copy(value, LastIndex, NextSeparator - LastIndex);
-    if (S <> '') or ((S = '') and (Options <> ExcludeEmpty)) then
-    begin
-      Inc(Total);
-      if CurrentLength < Total then
-      begin
-        CurrentLength := Total + DeltaGrow;
-        SetLength(Result, CurrentLength);
-      end;
-      Result[Total - 1] := S;
-    end;
-    LastIndex := NextSeparator + 1;
-    NextSeparator := IndexOfAny(value, Separator, LastIndex, Length(value));
-  end;
-
-  if (LastIndex < Length(value)) and (Total < Count) then
-  begin
-    Inc(Total);
-    SetLength(Result, Total);
-    Result[Total - 1] := Copy(value, LastIndex, Length(value));
-  end
-  else
-    SetLength(Result, Total);
-end;
 
 
 { TUriFactory }
@@ -224,24 +165,24 @@ var
       end;
     end;
   end;
-
-  procedure SplitQueryString(const value : string);
-  var
-    pairs : TArray<string>;
-    pair  : TArray<string>;
-    i : integer;
-  begin
-    pairs := Split(value, ['&'], MaxInt, None);
-    SetLength(queryParams, Length(pairs));
-    for i := 0 to Length(pairs) -1 do
-    begin
-      pair := Split(pairs[i], ['='], MaxInt, None);
-      queryParams[i].Name := pair[0];
-      if length(pair) > 1 then
-        queryParams[i].Value := pair[1];
-    end;
-
-  end;
+//
+//  procedure SplitQueryString(const value : string);
+//  var
+//    pairs : TArray<string>;
+//    pair  : TArray<string>;
+//    i : integer;
+//  begin
+//    pairs := Split(value, ['&'], MaxInt, None);
+//    SetLength(queryParams, Length(pairs));
+//    for i := 0 to Length(pairs) -1 do
+//    begin
+//      pair := Split(pairs[i], ['='], MaxInt, None);
+//      queryParams[i].Name := pair[0];
+//      if length(pair) > 1 then
+//        queryParams[i].Value := pair[1];
+//    end;
+//
+//  end;
 
 
   //        userinfo       host      port
@@ -360,7 +301,7 @@ var
       Dec(len,len - i);
       Dec(len); //?
       if Length(sQueryString) >  0 then
-        SplitQueryString(sQueryString);
+        queryParams := SplitQueryString(sQueryString);
     end;
     if len > idx then
       sPath := Copy(uriString, idx, len - idx + 1);

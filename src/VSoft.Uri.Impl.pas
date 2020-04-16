@@ -34,8 +34,8 @@ type
     function GetUsername: string;
     function GetAbsoluteUri: string;
     function GetLocalPath: string;
-
-
+    function GetQueryString: string;
+    function GetAbsolutePath: string;
 
     procedure SetFragment(const value: string);
     procedure SetHost(const value: string);
@@ -45,7 +45,7 @@ type
     procedure SetQueryParams(const value: TArray<TQueryParam>);
     procedure SetScheme(const value: string);
     procedure SetUsername(const value: string);
-    function GetAbsolutePath: string;
+    procedure SetQueryString(const value: string);
   public
     constructor Create(const originalString : string; const decoded : boolean;
                        const scheme, username, password, host, path, fragement : string;
@@ -57,10 +57,104 @@ type
     class function GetDefaultPortForScheme(const scheme: string): integer;
   end;
 
+type
+  TStringSplitOptions = (None, ExcludeEmpty);
+
+function Split(const value : string; const Separator: array of Char; Count: Integer;  Options: TStringSplitOptions): TArray<string>;
+
+function SplitQueryString(const value : string) : TArray<TQueryParam>;
+
+
 implementation
 
 uses
   System.SysUtils;
+
+function IndexOfAny(const value : string; const AnyOf: array of Char; StartIndex, Count: Integer): Integer;
+var
+  I: Integer;
+  C: Char;
+  Max: Integer;
+begin
+  if (StartIndex + Count) >= Length(value) then
+    Max := Length(value)
+  else
+    Max := StartIndex + Count;
+
+  I := StartIndex;
+  while I < Max do
+  begin
+    for C in AnyOf do
+      if value[I] = C then
+        Exit(I);
+    Inc(I);
+  end;
+  Result := -1;
+end;
+
+
+
+function Split(const value : string; const Separator: array of Char; Count: Integer;  Options: TStringSplitOptions): TArray<string>;
+const
+  DeltaGrow = 32;
+var
+  NextSeparator, LastIndex: Integer;
+  Total: Integer;
+  CurrentLength: Integer;
+  S: string;
+begin
+  Total := 0;
+  LastIndex := 1;
+  CurrentLength := 0;
+  NextSeparator := IndexOfAny(value, Separator, LastIndex, Length(value));
+  while (NextSeparator >= 0) and (Total < Count) do
+  begin
+    S := Copy(value, LastIndex, NextSeparator - LastIndex);
+    if (S <> '') or ((S = '') and (Options <> ExcludeEmpty)) then
+    begin
+      Inc(Total);
+      if CurrentLength < Total then
+      begin
+        CurrentLength := Total + DeltaGrow;
+        SetLength(Result, CurrentLength);
+      end;
+      Result[Total - 1] := S;
+    end;
+    LastIndex := NextSeparator + 1;
+    NextSeparator := IndexOfAny(value, Separator, LastIndex, Length(value));
+  end;
+
+  if (LastIndex < Length(value)) and (Total < Count) then
+  begin
+    Inc(Total);
+    SetLength(Result, Total);
+    Result[Total - 1] := Copy(value, LastIndex, Length(value));
+  end
+  else
+    SetLength(Result, Total);
+end;
+
+
+function SplitQueryString(const value : string) : TArray<TQueryParam>;
+var
+  pairs : TArray<string>;
+  pair  : TArray<string>;
+  i : integer;
+begin
+  SetLength(result, 0);
+  if value = '' then
+    exit;
+  pairs := Split(value, ['&'], MaxInt, None);
+  SetLength(result, Length(pairs));
+  for i := 0 to Length(pairs) -1 do
+  begin
+    pair := Split(pairs[i], ['='], MaxInt, None);
+    result[i].Name := pair[0];
+    if length(pair) > 1 then
+      result[i].Value := pair[1];
+  end;
+end;
+
 
 { TUriImpl }
 
@@ -208,6 +302,25 @@ begin
   result := FQueryParams;
 end;
 
+function TUriImpl.GetQueryString: string;
+var
+  i : integer;
+  l : integer;
+begin
+  result := '';
+  l := Length(FQueryParams) - 1;
+  if l > 0 then
+  begin
+    for i := 0 to l do
+    begin
+      result := FQueryParams[i].Name + '=' + FQueryParams[i].Value;
+      if i < l then
+        result := result + '&';
+    end;
+  end;
+
+end;
+
 function TUriImpl.GetScheme: string;
 begin
   result := FScheme;
@@ -246,6 +359,11 @@ end;
 procedure TUriImpl.SetQueryParams(const value: TArray<TQueryParam>);
 begin
   FQueryParams := Value;
+end;
+
+procedure TUriImpl.SetQueryString(const value: string);
+begin
+  FQueryParams := SplitQueryString(value);
 end;
 
 procedure TUriImpl.SetScheme(const value: string);
