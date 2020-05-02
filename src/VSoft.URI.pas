@@ -130,6 +130,11 @@ end;
 
 { TUriFactory }
 
+class function TUriFactory.Create: IUri;
+begin
+  result := TUriImpl.Create('');
+end;
+
 class function TUriFactory.Empty: IUri;
 begin
   result := TUriImpl.Create('');
