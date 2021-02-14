@@ -1,7 +1,7 @@
 {
   "metadata": {
     "id": "VSoft.Uri",
-    "version": "0.0.3",
+    "version": "0.1.0",
     "description": "Uri Parser",
     "authors": "Vincent Parrett",
     "projectUrl": "https://github.com/VSoftTechnologies/VSoft.Uri",
@@ -78,11 +78,25 @@
         {
           "src": "src\\***.pas",
           "dest": "src"
+        },
+        {
+          "src": "packages\\Rad Studio $compilerWithCodeName$\\*.dpk",
+          "dest": "packages\\Rad Studio $compilerWithCodeName$"
+        },
+        {
+          "src": "packages\\Rad Studio $compilerWithCodeName$\\*.dproj",
+          "dest": "packages\\Rad Studio $compilerWithCodeName$"
         }
       ],
       "searchPaths": [
         {
           "path": "src"
+        }
+      ],
+      "build": [
+        {
+          "id": "Runtime",
+          "project": ".\\packages\\Rad Studio $compilerWithCodeName$\\VSoft.UriR.dproj"
         }
       ]
     }
