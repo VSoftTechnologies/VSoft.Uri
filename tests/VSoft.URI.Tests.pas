@@ -59,6 +59,9 @@ type
 //    [TestCase('1','one:two:three','|')]
 //    procedure Test_Split(const value : string);
 
+    [Test]
+    procedure TestToString;
+
   end;
 
 implementation
@@ -66,6 +69,16 @@ implementation
 uses
   System.SysUtils,
   VSoft.URI;
+
+procedure TURITests.TestToString;
+var
+  uri : IUri;
+begin
+  Assert.IsTrue(TUriFactory.TryParse('http://172.24.91.40:5000/api/v1/index.json', true, uri));
+  Assert.AreEqual('http://172.24.91.40:5000/api/v1/index.json', uri.ToString);
+
+
+end;
 
 procedure TURITests.Test_all_the_parts;
 var

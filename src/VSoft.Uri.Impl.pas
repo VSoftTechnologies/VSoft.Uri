@@ -206,7 +206,7 @@ begin
     result := '';
 
   result := result + sAuth + FHost;
-  if (FPort > 0) and (FPort <> GetDefaultPortForScheme(FScheme)) and ((FScheme = 'https')  or  (FScheme = 'https')) then
+  if (FPort > 0) and (FPort <> GetDefaultPortForScheme(FScheme)) and ((FScheme = 'http')  or  (FScheme = 'https')) then
     result := result + ':' + IntToStr(FPort);
   if FPath <> '' then
   begin
