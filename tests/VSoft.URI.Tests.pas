@@ -55,6 +55,9 @@ type
     [TestCase('4','file:///c:/temp/foo/bar/test.txt|false','|')]
     procedure Test_IsUnc(const uriString : string; const isUnc : boolean);
 
+    [Test]
+    procedure TestBaseUriString;
+
 //    [Test]
 //    [TestCase('1','one:two:three','|')]
 //    procedure Test_Split(const value : string);
@@ -69,6 +72,15 @@ implementation
 uses
   System.SysUtils,
   VSoft.URI;
+
+procedure TURITests.TestBaseUriString;
+var
+  uri : IUri;
+  error : string;
+begin
+  Assert.IsTrue(TUriFactory.TryParseWithError('https://www.delphi.dev/api/v1/search', true, uri, error),'Expected uri to be valid : ' + error);
+  assert.AreEqual(uri.BaseUriString, 'https://www.delphi.dev');
+end;
 
 procedure TURITests.TestToString;
 var

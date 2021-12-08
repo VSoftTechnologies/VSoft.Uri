@@ -28,6 +28,7 @@ type
     function GetLocalPath : string;
     function GetAbsolutePath : string;
     function GetQueryString : string;
+    function GetBaseUriString : string;
 
     function ToString() : string;
 
@@ -43,6 +44,7 @@ type
     procedure SetQueryString(const value : string);
 
     property OriginalUriString : string read GetOriginal;
+    property BaseUriString : string read GetBaseUriString;
     property Scheme   : string read GetScheme write SetScheme;
     property UserName : string read GetUsername write SetUsername;
     property Password : string read GetPassword write SetPassword;
@@ -57,7 +59,6 @@ type
     property AbsoluteUri : string read GetAbsoluteUri;
     property AbsolutePath : string read GetAbsolutePath;
     property LocalPath : string read GetLocalPath;
-
   end;
 
   type

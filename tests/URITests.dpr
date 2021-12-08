@@ -29,6 +29,7 @@ begin
   TestInsight.DUnitX.RunRegisteredTests;
 {$ELSE}
   try
+    TDUnitX.Options.ExitBehavior := TDUnitXExitBehavior.Pause;
     //Check command line options, will exit if invalid
     TDUnitX.CheckCommandLine;
     //Create the test runner

@@ -36,6 +36,7 @@ type
     function GetLocalPath: string;
     function GetQueryString: string;
     function GetAbsolutePath: string;
+    function GetBaseUriString : string;
 
     procedure SetFragment(const value: string);
     procedure SetHost(const value: string);
@@ -228,6 +229,21 @@ begin
   end;
   if FFragment <> '' then
     result := result + '#' + FFragment;
+end;
+
+function TUriImpl.GetBaseUriString: string;
+begin
+  result := FScheme + '://' + FHost;
+  if FScheme = 'http' then
+  begin
+    if FPort <> 80 then
+       result := result + ':' + IntToStr(FPort);
+  end
+  else if FScheme = 'https' then
+  begin
+    if FPort <> 443 then
+       result := result + ':' + IntToStr(FPort);
+  end;
 end;
 
 class function TUriImpl.GetDefaultPortForScheme(const scheme: string): integer;
