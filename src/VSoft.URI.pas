@@ -29,6 +29,11 @@ type
     function GetAbsolutePath : string;
     function GetQueryString : string;
     function GetBaseUriString : string;
+    function GetPath : string;
+    function GetPathAndQuery : string;
+
+    procedure SetBaseUriString(const value : string);
+
 
     function ToString() : string;
 
@@ -42,9 +47,10 @@ type
     procedure SetFragment(const value : string);
     procedure SetQueryParams(const value : TArray<TQueryParam>);
     procedure SetQueryString(const value : string);
+    procedure SetPathAndQuery(const value : string);
 
     property OriginalUriString : string read GetOriginal;
-    property BaseUriString : string read GetBaseUriString;
+    property BaseUriString : string read GetBaseUriString write SetBaseUriString;
     property Scheme   : string read GetScheme write SetScheme;
     property UserName : string read GetUsername write SetUsername;
     property Password : string read GetPassword write SetPassword;
@@ -52,6 +58,8 @@ type
     property Port     : integer read GetPort     write SetPort;
     property QueryParams : TArray<TQueryParam> read GetQueryParams write SetQueryParams;
     property QueryString : string read GetQueryString write SetQueryString;
+    property Path         : string read GetPath write SetPath;
+    property PathAndQuery : string read GetPathAndQuery write SetPathAndQuery;
     property Fragment : string read GetFragment write SetFragment;
     property IsEmpty  : boolean read GetIsEmpty;
     property IsFile   : boolean read GetIsFile;
@@ -91,8 +99,8 @@ const
   Numeric =  ['0'..'9'];
   AlphaNumeric = Alpha + Numeric;
   SchemeChars = Alpha + ['.', '+', '-'];
-  
-{$WARN WIDECHAR_REDUCED OFF} 
+
+{$WARN WIDECHAR_REDUCED OFF}
 function IsAlpha(const c : Char) : boolean;
 begin
   result := c in Alpha;
@@ -409,3 +417,4 @@ begin
 end;
 
 end.
+

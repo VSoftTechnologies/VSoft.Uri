@@ -65,6 +65,9 @@ type
     [Test]
     procedure TestToString;
 
+    [Test]
+    procedure TestPathAndQuery;
+
   end;
 
 implementation
@@ -80,6 +83,15 @@ var
 begin
   Assert.IsTrue(TUriFactory.TryParseWithError('https://www.delphi.dev/api/v1/search', true, uri, error),'Expected uri to be valid : ' + error);
   assert.AreEqual(uri.BaseUriString, 'https://www.delphi.dev');
+end;
+
+procedure TURITests.TestPathAndQuery;
+var
+  uri : IUri;
+begin
+  Assert.IsTrue(TUriFactory.TryParse('http://172.24.91.40:5000/api/v1/index.json?foo=bar&blau=blahhhh#fragment', true, uri));
+  Assert.AreEqual('/api/v1/index.json?foo=bar&blau=blahhhh#fragment', uri.PathAndQuery);
+
 end;
 
 procedure TURITests.TestToString;

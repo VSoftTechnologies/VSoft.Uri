@@ -37,6 +37,8 @@ type
     function GetQueryString: string;
     function GetAbsolutePath: string;
     function GetBaseUriString : string;
+    function GetPath : string;
+    function GetPathAndQuery : string;
 
     procedure SetFragment(const value: string);
     procedure SetHost(const value: string);
@@ -47,6 +49,8 @@ type
     procedure SetScheme(const value: string);
     procedure SetUsername(const value: string);
     procedure SetQueryString(const value: string);
+    procedure SetBaseUriString(const value : string);
+    procedure SetPathAndQuery(const value : string);
   public
     constructor Create(const originalString : string; const decoded : boolean;
                        const scheme, username, password, host, path, fragement : string;
@@ -125,7 +129,7 @@ begin
     NextSeparator := IndexOfAny(value, Separator, LastIndex, Length(value));
   end;
 
-  if (LastIndex < Length(value)) and (Total < Count) then
+  if (LastIndex <= Length(value)) and (Total < Count) then
   begin
     Inc(Total);
     SetLength(Result, Total);
@@ -308,6 +312,25 @@ begin
 end;
 
 
+function TUriImpl.GetPath: string;
+begin
+  result := FPath;
+end;
+
+function TUriImpl.GetPathAndQuery: string;
+var
+  sValue : string;
+begin
+  result := GetAbsolutePath;
+  sValue := GetQueryString;
+  if sValue <> '' then
+    result := result + '?' + sValue;
+  sValue := GetFragment;
+  if sValue <> '' then
+    result := result + '#' + sValue;
+
+end;
+
 function TUriImpl.GetPort: Integer;
 begin
   result := FPort;
@@ -329,12 +352,11 @@ begin
   begin
     for i := 0 to l do
     begin
-      result := FQueryParams[i].Name + '=' + FQueryParams[i].Value;
+      result := result + FQueryParams[i].Name + '=' + FQueryParams[i].Value;
       if i < l then
         result := result + '&';
     end;
   end;
-
 end;
 
 function TUriImpl.GetScheme: string;
@@ -345,6 +367,20 @@ end;
 function TUriImpl.GetUsername: string;
 begin
   result := FUsername;
+end;
+
+procedure TUriImpl.SetBaseUriString(const value: string);
+var
+  uri : IUri;
+  error : string;
+begin
+  if not TUriFactory.TryParseWithError(value, true, uri, error ) then
+    raise EArgumentOutOfRangeException.Create('Invalid baseuri : ' + error);
+
+  FScheme := uri.Scheme;
+  FHost := uri.Host;
+  FPort := uri.Port;
+
 end;
 
 procedure TUriImpl.SetFragment(const value: string);
@@ -364,7 +400,30 @@ end;
 
 procedure TUriImpl.SetPath(const value: string);
 begin
+  //todo : validate this
   FPath := value;
+end;
+
+procedure TUriImpl.SetPathAndQuery(const value: string);
+var
+  uri : IUri;
+  error : string;
+  sUri : string;
+begin
+  sUri := Self.GetBaseUriString;
+  if value <> '' then
+    sUri := sUri + '/' + value;
+
+  if not TUriFactory.TryParseWithError(sUri, true, uri, error ) then
+    raise EArgumentOutOfRangeException.Create('Invalid baseuri : ' + error);
+
+  FScheme := uri.Scheme;
+  FHost := uri.Host;
+  FPort := uri.Port;
+  FPath := uri.AbsolutePath;
+  FFragment := uri.Fragment;
+  FQueryParams := Copy(uri.QueryParams);
+
 end;
 
 procedure TUriImpl.SetPort(const value: Integer);
@@ -398,3 +457,4 @@ begin
 end;
 
 end.
+
