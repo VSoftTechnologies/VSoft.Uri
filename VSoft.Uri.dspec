@@ -1,10 +1,11 @@
 {
   "metadata": {
     "id": "VSoft.Uri",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "description": "Uri Parser",
     "authors": "Vincent Parrett",
     "projectUrl": "https://github.com/VSoftTechnologies/VSoft.Uri",
+    "repositoryUrl": "https://github.com/VSoftTechnologies/VSoft.Uri",
     "license": "Apache-2.0",
     "copyright": "Vincent Parrett and contributors",
     "tags": "uri parser"
