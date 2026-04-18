@@ -1,0 +1,53 @@
+# DPM package spec file
+# Used to build packages
+
+min client version: 1.0
+# metadata describes the package to the user
+metadata:
+  id: VSoft.Uri
+  authors: [ Vincent Parrett ]
+  description: Simple Uri Parser
+  projectUrl: https://github.com/VSoftTechnologies/VSoft.Uri
+  repositoryUrl: https://github.com/VSoftTechnologies/VSoft.Uri
+  license: Apache-2.0
+  readme: README.md
+  copyright: Vincent Parrett and contributors
+  tags: [ uri, parser ]
+  version: 0.3.3
+  repositoryCommit: Id:525a61dcbf11bc1e7cd410a39b5c6534ee7a6f93
+
+# define variable defaults - can be overriden in targetPlatforms
+variables:
+  packageSource: "Rad Studio $compilernoprefix$"
+
+# package folder names are a mess. 
+targetPlatforms:
+  - compiler from: delphixe2
+    compiler to: delphixe8
+    platforms: [ win32, win64 ]
+  - compiler from: delphi10.0
+    compiler to: delphi10.4
+    platforms: [ win32, win64 ]
+    variables:
+      packageSource: "Rad Studio $compilernoprefix$ $compilerCodeName$"
+  - compilers: [ delphi11 ]
+    platforms: [ win32, win64 ]
+    variables:
+      packageSource: "Rad Studio $compilernoprefix$.0 $compilerCodeName$"
+  - compiler from: delphi12
+    compiler to: delphi13
+    platforms: [ win32, win64 ]
+    variables:
+      packageSource: "Rad Studio $compilernoprefix$"
+
+templates:
+  - name: default
+    source:
+      - src: ./LICENSE.txt
+      - src: ./src/*.pas
+      - src: ./packages/$packageSource$/*.dpk
+        dest: ./packages/$packageSource$
+      - src: ./packages/$packageSource$/*.dproj
+        dest: ./packages/$packageSource$
+    build:
+      - project: ./packages/$packageSource$/VSoft.UriR.dproj
