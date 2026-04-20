@@ -14,7 +14,7 @@ metadata:
   copyright: Vincent Parrett and contributors
   tags: [ uri, parser ]
   version: 0.3.3
-  repositoryCommit: Id:525a61dcbf11bc1e7cd410a39b5c6534ee7a6f93
+  repositoryCommit: #HASH#
 
 # define variable defaults - can be overriden in targetPlatforms
 variables:
