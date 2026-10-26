@@ -443,7 +443,7 @@ end;
 
 procedure TUriImpl.SetScheme(const value: string);
 begin
-  FScheme := value;
+  FScheme := LowerCase(value);
 end;
 
 procedure TUriImpl.SetUsername(const value: string);

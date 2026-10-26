@@ -40,6 +40,24 @@ type
     [Test]
     procedure Test_http_default_port;
 
+    [Test]
+    [TestCase('1','HTTPS://www.finalbuilder.com/with/a/path|443','|')]
+    [TestCase('2','Https://www.finalbuilder.com/with/a/path|443','|')]
+    [TestCase('3','HTTP://www.finalbuilder.com/with/a/path|80','|')]
+    procedure Test_default_port_ignores_scheme_case(const uriString : string; const expectedPort : integer);
+
+    [Test]
+    procedure Test_scheme_is_lowercased;
+
+    [Test]
+    procedure TestBaseUriString_uppercase_scheme;
+
+    [Test]
+    procedure TestToString_uppercase_scheme_keeps_port;
+
+    [Test]
+    procedure TestSetScheme_uppercase_keeps_port;
+
 
     [TestCase('1','https://www.finalbuilder.com|https://www.finalbuilder.com|/|/','|')]
     [TestCase('2','https://www.finalbuilder.com/with/a/path|https://www.finalbuilder.com/with/a/path|/with/a/path|/with/a/path','|')]
@@ -85,6 +103,15 @@ begin
   assert.AreEqual(uri.BaseUriString, 'https://www.delphi.dev');
 end;
 
+procedure TURITests.TestBaseUriString_uppercase_scheme;
+var
+  uri : IUri;
+  error : string;
+begin
+  Assert.IsTrue(TUriFactory.TryParseWithError('HTTPS://www.delphi.dev/api/v1/search', true, uri, error),'Expected uri to be valid : ' + error);
+  Assert.AreEqual('https://www.delphi.dev', uri.BaseUriString, false);
+end;
+
 procedure TURITests.TestPathAndQuery;
 var
   uri : IUri;
@@ -102,6 +129,24 @@ begin
   Assert.AreEqual('http://172.24.91.40:5000/api/v1/index.json', uri.ToString);
 
 
+end;
+
+procedure TURITests.TestToString_uppercase_scheme_keeps_port;
+var
+  uri : IUri;
+begin
+  Assert.IsTrue(TUriFactory.TryParse('HTTP://172.24.91.40:5000/api/v1/index.json', true, uri));
+  Assert.AreEqual('http://172.24.91.40:5000/api/v1/index.json', uri.ToString, false);
+end;
+
+procedure TURITests.TestSetScheme_uppercase_keeps_port;
+var
+  uri : IUri;
+begin
+  Assert.IsTrue(TUriFactory.TryParse('http://172.24.91.40:5000/api/v1/index.json', true, uri));
+  uri.Scheme := 'HTTP';
+  Assert.AreEqual('http', uri.Scheme, false);
+  Assert.AreEqual('http://172.24.91.40:5000/api/v1/index.json', uri.ToString, false);
 end;
 
 procedure TURITests.Test_all_the_parts;
@@ -131,6 +176,24 @@ begin
   Assert.IsTrue(TUriFactory.TryParseWithError('http://vincent:password@[2001:cdba:0000:0000:0000:0000:3257:9652]/one/two?hello=world&goodbye=cruelworld#fragment', true, uri, error),'Expected uri to be valid : ' + error);
   Assert.AreEqual('http', uri.Scheme);
   Assert.AreEqual(80, uri.Port);
+end;
+
+procedure TURITests.Test_default_port_ignores_scheme_case(const uriString : string; const expectedPort : integer);
+var
+  uri : IUri;
+  error : string;
+begin
+  Assert.IsTrue(TUriFactory.TryParseWithError(uriString, true, uri, error),'Expected uri to be valid : ' + error);
+  Assert.AreEqual(expectedPort, uri.Port);
+end;
+
+procedure TURITests.Test_scheme_is_lowercased;
+var
+  uri : IUri;
+  error : string;
+begin
+  Assert.IsTrue(TUriFactory.TryParseWithError('HTTPS://www.finalbuilder.com/with/a/path', true, uri, error),'Expected uri to be valid : ' + error);
+  Assert.AreEqual('https', uri.Scheme, false);
 end;
 
 procedure TURITests.Test_IsUnc(const uriString: string; const isUnc: boolean);

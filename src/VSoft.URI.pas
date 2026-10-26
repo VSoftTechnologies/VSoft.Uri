@@ -376,7 +376,8 @@ begin
   if idx = 1 then
     raise EArgumentException.Create('Empty Uri Scheme : ' + uriString);
 
-  sScheme := Copy(uriString, 1,idx -1);
+  //schemes are case insensitive, lowercase is the canonical form (RFC 3986 3.1)
+  sScheme := LowerCase(Copy(uriString, 1,idx -1));
   Inc(idx); //skip the :
 
   //check if we have authority
